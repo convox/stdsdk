@@ -190,11 +190,11 @@ func CopyStreamToEachOther(fromConn io.ReadWriter, toConn io.ReadWriter) error {
 	toChan, toErrChan := chanFromReader(toConn)
 
 	if xc, ok := toConn.(io.Closer); ok {
-		xc.Close()
+		defer xc.Close()
 	}
 
 	if yc, ok := fromConn.(io.Closer); ok {
-		yc.Close()
+		defer yc.Close()
 	}
 
 	for {

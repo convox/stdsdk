@@ -186,15 +186,21 @@ func CopyFromToWsTcp(wsConn *AdapterWs, tcpConn net.Conn) error {
 }
 
 func CopyStreamToEachOther(fromConn io.ReadWriter, toConn io.ReadWriter) error {
+	return CopyStreamToEachOtherWithCloseOption(fromConn, toConn, true)
+}
+
+func CopyStreamToEachOtherWithCloseOption(fromConn io.ReadWriter, toConn io.ReadWriter, shouldClose bool) error {
 	fromChan, fromErrChan := chanFromReader(fromConn)
 	toChan, toErrChan := chanFromReader(toConn)
 
-	if xc, ok := toConn.(io.Closer); ok {
-		defer xc.Close()
-	}
+	if shouldClose {
+		if xc, ok := toConn.(io.Closer); ok {
+			defer xc.Close()
+		}
 
-	if yc, ok := fromConn.(io.Closer); ok {
-		defer yc.Close()
+		if yc, ok := fromConn.(io.Closer); ok {
+			defer yc.Close()
+		}
 	}
 
 	for {

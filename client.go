@@ -218,6 +218,13 @@ func (c *Client) Websocket(path string, opts RequestOptions) (io.ReadCloser, err
 
 	adapterWs := NewAdapterWs(ws)
 
+	if c.ctx != nil && c.ctx.Done() != nil {
+		go func() {
+			<-c.ctx.Done()
+			adapterWs.Close()
+		}()
+	}
+
 	go copyToWS(c.ctx, adapterWs, or)
 	go copyFromWS(c.ctx, adapterWs, w)
 	go WsKeepAlivePing(c.ctx, adapterWs)

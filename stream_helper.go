@@ -294,10 +294,8 @@ func copyToWS(ctx context.Context, ws *AdapterWs, r io.Reader) error {
 	}
 }
 
-func copyFromWS(ctx context.Context, ws *AdapterWs, w io.WriteCloser) error {
+func copyFromWS(ctx context.Context, ws *AdapterWs, w io.Writer) error {
 	wsChan, wsErrChan := chanFromReader(ctx, ws)
-
-	defer w.Close()
 
 	for {
 		select {
@@ -305,7 +303,7 @@ func copyFromWS(ctx context.Context, ws *AdapterWs, w io.WriteCloser) error {
 			return nil
 		case data := <-wsChan:
 			if data == nil {
-				return fmt.Errorf("TCP connection closed from destination")
+				return nil
 			} else {
 				_, err := w.Write(data)
 				if err != nil {
@@ -316,6 +314,9 @@ func copyFromWS(ctx context.Context, ws *AdapterWs, w io.WriteCloser) error {
 				}
 			}
 		case err := <-wsErrChan:
+			if ctx.Err() != nil {
+				return nil
+			}
 			return err
 		}
 	}
